@@ -30,7 +30,7 @@ int main(int, char**) {
     };
     ::RegisterClassExW(&wc);
 
-    g_mainWindow = ::CreateWindowExW(0, wc.lpszClassName, L"Camera ViewerX", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
+    g_mainWindow = ::CreateWindowExW(0, wc.lpszClassName, L"CamVieX", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
 
     if (!renderer.Initialize(g_mainWindow)) {
         renderer.Cleanup();
