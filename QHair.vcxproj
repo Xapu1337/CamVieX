@@ -116,7 +116,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_WCSTOK</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -156,8 +156,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\dshow_utils.cpp" />
+    <ClCompile Include="src\graph.cpp" />
+    <ClCompile Include="src\ImGuiModaler.cpp" />
     <ClCompile Include="src\Renderer.cpp" />
-    <ClCompile Include="src\CameraManager.cpp" />
     <ClCompile Include="src\libaries\imgui\backends\imgui_impl_dx10.cpp" />
     <ClCompile Include="src\libaries\imgui\backends\imgui_impl_dx11.cpp" />
     <ClCompile Include="src\libaries\imgui\backends\imgui_impl_win32.cpp" />
@@ -169,10 +171,15 @@
     <ClCompile Include="src\libaries\imgui\misc\freetype\imgui_freetype.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\UIManager.cpp" />
+    <ClCompile Include="src\StringConversion.cpp" />
+    <ClCompile Include="src\WebcamController.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\dshow_utils.h" />
+    <ClInclude Include="src\graph.h" />
+    <ClInclude Include="src\ImGuiModaler.h" />
+    <ClInclude Include="src\qedit.h" />
     <ClInclude Include="src\Renderer.h" />
-    <ClInclude Include="src\CameraManager.h" />
     <ClInclude Include="src\libaries\freetype\include\freetype\config\ftconfig.h" />
     <ClInclude Include="src\libaries\freetype\include\freetype\config\ftheader.h" />
     <ClInclude Include="src\libaries\freetype\include\freetype\config\ftmodule.h" />
@@ -239,6 +246,8 @@
     <ClInclude Include="src\libaries\imgui\imstb_truetype.h" />
     <ClInclude Include="src\libaries\imgui\misc\freetype\imgui_freetype.h" />
     <ClInclude Include="src\UIManager.h" />
+    <ClInclude Include="src\StringConversion.h" />
+    <ClInclude Include="src\WebcamController.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

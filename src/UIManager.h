@@ -1,21 +1,26 @@
 #pragma once
 
 #include <memory>
-#include "CameraManager.h"
+#include "WebcamController.h"
+#include "imgui.h"
+#include "ImGuiModaler.h"  // Assuming you have a modal handling utility like ImGuiModaler
 
 class UIManager {
 public:
-    UIManager(std::shared_ptr<CameraManager> cameraManager);
+    // Constructor that accepts Direct3D device and context for webcam controller
+    UIManager(ID3D11Device* device, ID3D11DeviceContext* context);
 
-    // Render the UI
-    void render();
+    // Main render function for the UI
+    void Render();
 
 private:
-    void handleOverlays();
+    // Webcam controller instance
+    WebcamController webcam;
 
-    std::shared_ptr<CameraManager> cameraManager;
+    // Function to create modals (e.g., for camera selection)
+    void CreateModals();
 
-    // Popup state flags
-    bool showSelectCameraPopup = false;
-    bool showSettingsPopup = false;
+    // Function to handle overlays such as modals
+    void HandleOverlays();
 };
+

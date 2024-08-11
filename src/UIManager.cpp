@@ -1,81 +1,121 @@
 #include "UIManager.h"
+#include "StringConversion.h"  // Include the header where the wstringToString function is declared
 #include "imgui.h"
 #include <iostream>
+#include "WebcamController.h"
 
-UIManager::UIManager(std::shared_ptr<CameraManager> cameraManager)
-    : cameraManager(cameraManager) {}
+// Initialize the WebcamController with Direct3D device and context
+UIManager::UIManager(ID3D11Device* device, ID3D11DeviceContext* context)
+    : webcam(device, context) {
+    CreateModals();
+}
 
-void UIManager::render() {
-    std::cerr << "[UIManager] Starting render" << std::endl;
+void UIManager::CreateModals() {
+    // This method is kept in case you want to initialize or preload modals if necessary.
+}
 
+void UIManager::Render() {
     // Top Menu
     ImGui::BeginMainMenuBar();
     if (ImGui::MenuItem("Exit")) {
         std::cerr << "[UIManager] Exit selected" << std::endl;
-        PostQuitMessage(0);
     }
     if (ImGui::MenuItem("Select Camera")) {
         std::cerr << "[UIManager] 'Select Camera' selected" << std::endl;
-        showSelectCameraPopup = true;
-        ImGui::OpenPopup("Select Camera");
+        auto selectCameraModal = std::make_unique<ImGuiModaler>("SelectCameraModal", [this]() {
+            ImGui::Text("Select Camera");
+
+            // Get the list of available cameras
+            auto devices = webcam.ListAvailableCameras();
+            if (devices.empty()) {
+                ImGui::Text("No cameras found.");
+                return;
+            }
+
+            static int currentCameraIndex = 0;
+            std::vector<const char*> cameraNames;
+
+            // Convert std::wstring to std::string and store it in cameraNames
+            std::vector<std::string> cameraNamesStrings;
+            for (const auto& cam : devices) {
+                cameraNamesStrings.push_back(wstringToString(cam)); // Use the conversion function
+            }
+
+            // Convert std::string to const char* and store it in cameraNames for ImGui::Combo
+            for (const auto& camName : cameraNamesStrings) {
+                cameraNames.push_back(camName.c_str());
+            }
+
+            // Create a combo box for camera selection
+            ImGui::Combo("Cameras", &currentCameraIndex, cameraNames.data(), static_cast<int>(cameraNames.size()));
+
+            // Place "Select" and "Close" buttons in a group
+            ImGui::BeginGroup();
+            if (ImGui::Button("Select") && currentCameraIndex >= 0) {
+                if (!SUCCEEDED(webcam.Initialize(currentCameraIndex))) {
+                    std::cerr << "Failed to initialize the webcam." << std::endl;
+                }
+                else {
+                    std::cout << "Webcam initialized." << std::endl;
+                    webcam.StartCapture();  // Start capturing immediately
+                }
+                ImGuiModaler::CloseCurrentModal();
+            }
+
+            ImGui::SameLine(); // Place buttons inline
+            if (ImGui::Button("Close")) {
+                ImGuiModaler::CloseCurrentModal();
+            }
+            ImGui::EndGroup();
+
+            // Provide feedback if no camera is selected and user tries to press "Select"
+            if (currentCameraIndex == -1) {
+                ImGui::Text("Please select a camera.");
+            }
+            });
+        selectCameraModal->SetBackdrop(true, 0.9f);  // Set backdrop properties
+        ImGuiModaler::ShowModal(std::move(selectCameraModal));
     }
     if (ImGui::MenuItem("Settings")) {
         std::cerr << "[UIManager] 'Settings' selected" << std::endl;
-        showSettingsPopup = true;
-        ImGui::OpenPopup("Settings");
+        auto settingsModal = std::make_unique<ImGuiModaler>("SettingsModal", [this]() {
+            ImGui::Text("Settings");
+            // Implement settings UI here
+            });
+        settingsModal->SetBackdrop(true, 0.9f);  // Set backdrop properties
+        ImGuiModaler::ShowModal(std::move(settingsModal));
     }
     ImGui::EndMainMenuBar();
 
-    // Handle Popups
-    handleOverlays();
+    // Handle Overlays (render modals)
+    HandleOverlays();
 
     // Left Pane - Camera Feed
     ImGui::SetNextWindowPos(ImVec2(0, 20), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x * 0.7f, ImGui::GetIO().DisplaySize.y), ImGuiCond_Always);
     ImGui::Begin("Camera Feed", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-    if (cameraManager->isOpened()) {
-        ImGui::Text("Camera Feed Display (Placeholder)");
+
+    if (ID3D11ShaderResourceView* tex = webcam.GetFrameTexture()) {
+        ImGui::Image(tex, ImVec2(640, 480)); // Adjust size as necessary
     }
     else {
-        ImGui::Text("No Camera Selected.");
+        ImGui::Text("No frame available");
     }
+
+
     ImGui::End();
 
     // Right Pane - Sidebar
     ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.7f, 20), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x * 0.3f, ImGui::GetIO().DisplaySize.y), ImGuiCond_Always);
     ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-    if (cameraManager->isOpened()) {
-        int exposure = static_cast<int>(cameraManager->getProperty(CameraControl_Exposure));
-        if (ImGui::SliderInt("Exposure", &exposure, -10, 10)) {
-            cameraManager->setProperty(CameraControl_Exposure, exposure);
-        }
-        cameraManager->dumpCameraInfo();
-    }
-    else {
-        ImGui::Text("No camera opened.");
-    }
-    ImGui::End();
 
-    std::cerr << "[UIManager] End render" << std::endl;
+    // Implement settings UI here
+
+    ImGui::End();
 }
 
-void UIManager::handleOverlays() {
-    if (ImGui::BeginPopupModal("Select Camera", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Select Camera (this is a placeholder)");
-        if (ImGui::Button("Close")) {
-            ImGui::CloseCurrentPopup();
-            showSelectCameraPopup = false;
-        }
-        ImGui::EndPopup();
-    }
-
-    if (ImGui::BeginPopupModal("Settings", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Settings (this is a placeholder)");
-        if (ImGui::Button("Close")) {
-            ImGui::CloseCurrentPopup();
-            showSettingsPopup = false;
-        }
-        ImGui::EndPopup();
-    }
+void UIManager::HandleOverlays() {
+    // Render modals if they are open
+    ImGuiModaler::RenderActiveModal();
 }
